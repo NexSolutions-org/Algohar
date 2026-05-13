@@ -1,0 +1,202 @@
+You are my Website Builder AI Agent.
+Your task is to convert my old Shopify donation site (algohar.org) into a modern React custom website.
+
+Follow these instructions and content specs A to Z:
+
+1. Brand & Theme
+
+Organization Name: Algohar Educational & Welfare Society
+
+Primary Color: #E60000 (Red)
+
+Secondary Colors: White (#FFFFFF), Black (#000000), Light Gray (#F5F5F5)
+
+Typography: Use modern sans-serif (e.g., Inter, Open Sans, or similar)
+
+Logo: Use Algohar logo in red (as provided)
+
+Style: Clean, modern, minimal; strong use of white space; accessible (WCAG AA)
+
+2. Global Structure
+
+Top navigation: Donate, Services, Projects, Reports, Blogs, About Us, Bank Details, Contact Us
+
+Sticky header with Donate Now button in red.
+
+Footer: show Contact info, Socials, Quick Links, and Collaborators logos.
+
+3. Pages & Content
+Home (/)
+
+Hero: Mission statement, Donate Now button.
+
+Services highlights (Education, Health Facilities, Child Welfare, Ration Program).
+
+Featured Project / Report.
+
+Collaborators logos strip.
+
+CTA: Become a Donor Today → Donate page.
+
+Donate Ration (/donate/ration)
+
+Title: DONATE RATION
+
+Summary: “Donate Ration Monthly is a charitable program that provides monthly rations to needy families, helping to ensure they don't miss essential meals. You can easily give back and make a difference in the lives of those in need.”
+
+Gallery: show ration distribution photos.
+
+Donation Options:
+
+One-time or Monthly
+
+Presets: Rs.1,000 / Rs.3,000 / Rs.6,000
+
+Custom amount allowed (min Rs.500)
+
+Quantity = number of ration packages (each Rs.6,000)
+
+CTA Button: DONATE NOW (replace Add to Cart).
+
+Impact Note: “Rs.6,000 supports a family with monthly rations.”
+
+Trust Badges: SSL secure • Registered Welfare Trust • Partner Bank.
+
+Below the fold: impact bullets, FAQ, link to Reports.
+
+Services (/services)
+
+Free Education, Health Facilities, Child Welfare, Monthly Ration Program.
+
+Each service: short description, photo, impact stats.
+
+Projects (/projects)
+
+Showcase past & ongoing projects with summary, location, date, and outcomes.
+
+Reports (/reports)
+
+Upload annual / monthly reports as downloadable PDFs.
+
+Each entry: title, date, short abstract, download link.
+
+Blogs (/blogs)
+
+List of blog posts with featured image, date, author.
+
+Blog detail page with content, related posts.
+
+About Us (/about)
+
+Mission, vision, history, team info.
+
+Collaborators section (Daraz, University of Lahore, PayFast, Social Welfare Department Punjab, Dubai Islamic Bank).
+
+Bank Details (/bank-details)
+
+Heading: Bank Accounts
+
+Intro: “You can donate via bank transfer to the accounts below. Please email or WhatsApp your transaction slip so we can issue a receipt.”
+
+Show accounts in card format:
+
+Habib Bank Limited (HBL)
+
+Account Title: Al Gohar Educational & Welfare Society
+
+Account Number: 2305-79012656-03
+
+IBAN: PK51HABB0023057901265603
+
+SWIFT: HABBPKKA007
+
+Branch Code: 2305
+
+Dubai Islamic Bank (DIB)
+
+Account Title: Al Gohar Educational & Welfare Society
+
+Account Number: 0038744002
+
+IBAN: PK33DUIB0000000038744002
+
+Add “Copy” buttons for Account # and IBAN.
+
+Small note: “International donors: please use IBAN and SWIFT.”
+
+Contact Us (/contact)
+
+Address: Plot no 5, Block 3, Sector D-II, Green Town, Lahore, Pakistan
+
+Phones: +92 321 2546427, +92 42 35233555, +92 42 35116263
+
+Email: info@algohar.org
+
+Socials: Facebook, Instagram (icons linked)
+
+Map embed of location.
+
+Contact form: Name, Email, Phone, Message → email to info@algohar.org
+.
+
+Success message: “Thank you! We’ll be in touch soon.”
+
+4. Footer
+
+Logo + tagline.
+
+Quick links (same as nav).
+
+Contact info + social icons.
+
+Collaborators logos (row).
+
+Copyright line.
+
+5. Donation Flow
+
+Clicking Donate Now opens donation checkout modal/page.
+
+Collect donor details (Name, Email, Phone).
+
+Show amount selected.
+
+Payment methods: Card (PayFast), Bank Transfer, Mobile Wallet.
+
+After donation: Show confirmation screen + send receipt email.
+
+6. Accessibility
+
+Alt text for all images (e.g., “Volunteer distributing ration bags”).
+
+Contrast ratio AA.
+
+Buttons keyboard-accessible.
+
+7. Analytics Events
+
+donation_view (item_id)
+
+donation_cta_click (amount, type)
+
+donation_checkout_submit (success/fail)
+
+bank_details_copy (iban/account, bank_name)
+
+contact_form_submit (success/fail)
+
+8. Must-Follow Rules
+
+Do not use e-commerce/cart wording (“Add to Cart”). Always use Donate Now.
+
+No SKU/stock logic. Donation pages ≠ products.
+
+Keep old URLs if possible for SEO, or apply 301 redirects.
+
+Keep site responsive (desktop + mobile).
+
+Final Instruction
+
+Build the complete React website with this structure, data, and color scheme. Use reusable components for Donate Items, Services, Projects, Reports, and Collaborators. Ensure the Donate Now flow is central and simple.
+
+✅ End of Prompt.

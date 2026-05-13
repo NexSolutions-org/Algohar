@@ -1,0 +1,17 @@
+RewriteEngine On
+
+# 1) Laravel backend routing (ALL backend requests)
+RewriteCond %{REQUEST_URI} ^/backend/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^backend/(.*)$ backend/public/index.php [L,QSA]
+
+# 2) If using /api/ directly
+RewriteCond %{REQUEST_URI} ^/api/ [NC]
+RewriteRule ^api/(.*)$ backend/public/index.php [L,QSA]
+
+# 3) React/Angular/Vue frontend SPA routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+

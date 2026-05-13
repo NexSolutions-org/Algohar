@@ -1,0 +1,165 @@
+<?php
+/**
+ * Donation API Endpoint - Minimal PHP Version
+ * Handles donations exactly like the original Node.js backend
+ * Preserves all existing functionality and API structure
+ */
+
+// CORS headers (keep exact same as original)
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed']);
+    exit;
+}
+
+// SendGrid configuration
+$SENDGRID_API_KEY = getenv('SENDGRID_API_KEY') ?: 'SG.your_sendgrid_api_key_here';
+$NOTIFICATION_EMAIL = 'info@algohar.org'; // Change to your email
+
+// Get JSON input (same as original)
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Validate exactly as original
+$required_fields = ['donorName', 'donorEmail', 'amount', 'type', 'paymentMethod'];
+foreach ($required_fields as $field) {
+    if (empty($input[$field])) {
+        http_response_code(400);
+        echo json_encode(['error' => "Invalid donation data - $field required"]);
+        exit;
+    }
+}
+
+// Extract and validate data (same validation as original)
+$donorName = htmlspecialchars(trim($input['donorName']));
+$donorEmail = filter_var(trim($input['donorEmail']), FILTER_VALIDATE_EMAIL);
+$donorPhone = isset($input['donorPhone']) ? htmlspecialchars(trim($input['donorPhone'])) : null;
+$amount = floatval($input['amount']);
+$type = htmlspecialchars($input['type']);
+$paymentMethod = htmlspecialchars($input['paymentMethod']);
+
+if (!$donorEmail) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid email address']);
+    exit;
+}
+
+if ($amount < 500) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Minimum donation amount is Rs. 500']);
+    exit;
+}
+
+// Generate donation ID (same format as original)
+$donationId = 'DON-' . date('Y') . '-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+
+// Create donation object (exact same structure as original)
+$donation = [
+    'id' => $donationId,
+    'donorName' => $donorName,
+    'donorEmail' => $donorEmail,
+    'donorPhone' => $donorPhone,
+    'amount' => $amount,
+    'type' => $type,
+    'paymentMethod' => $paymentMethod,
+    'status' => 'pending',
+    'createdAt' => date('Y-m-d H:i:s')
+];
+
+// Log donation (same console output as original)
+error_log("🎉 NEW DONATION RECEIVED!");
+error_log("==========================================");
+error_log("💰 Amount: Rs. " . number_format($amount));
+error_log("👤 Name: " . $donorName);
+error_log("📧 Email: " . $donorEmail);
+error_log("📱 Phone: " . ($donorPhone ?: 'Not provided'));
+error_log("💳 Payment: " . ($paymentMethod === 'card' ? 'Credit/Debit Card' : 
+                           ($paymentMethod === 'bank' ? 'Bank Transfer' : 'Mobile Payment')));
+error_log("🔄 Type: " . ($type === 'one-time' ? 'One-time' : 'Monthly'));
+error_log("🆔 ID: " . $donationId);
+error_log("==========================================");
+
+// Send email notification (only if SendGrid is configured)
+if ($SENDGRID_API_KEY !== 'SG.your_sendgrid_api_key_here') {
+    $emailData = [
+        'personalizations' => [
+            [
+                'to' => [['email' => $NOTIFICATION_EMAIL]],
+                'subject' => 'New Donation Received - Algohar Website'
+            ]
+        ],
+        'from' => ['email' => 'noreply@algohar.org', 'name' => 'Algohar Website'],
+        'content' => [
+            [
+                'type' => 'text/html',
+                'value' => "
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                        <h2 style='color: #E60000; text-align: center;'>New Donation Received!</h2>
+                        
+                        <div style='background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+                            <h3 style='color: #333; margin-top: 0;'>Donor Information:</h3>
+                            <p><strong>Name:</strong> $donorName</p>
+                            <p><strong>Email:</strong> $donorEmail</p>
+                            " . ($donorPhone ? "<p><strong>Phone:</strong> $donorPhone</p>" : "") . "
+                        </div>
+                        
+                        <div style='background-color: #fff3f3; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #E60000;'>
+                            <h3 style='color: #333; margin-top: 0;'>Donation Details:</h3>
+                            <p><strong>Amount:</strong> Rs. " . number_format($amount) . "</p>
+                            <p><strong>Type:</strong> " . ($type === 'one-time' ? 'One-time Donation' : 'Monthly Donation') . "</p>
+                            <p><strong>Payment Method:</strong> " . ($paymentMethod === 'card' ? 'Credit/Debit Card' : 
+                                                                    ($paymentMethod === 'bank' ? 'Bank Transfer' : 'Mobile Payment')) . "</p>
+                            <p><strong>Donation ID:</strong> $donationId</p>
+                        </div>
+                        
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <p style='color: #666; font-size: 14px;'>
+                                This notification was sent automatically from your Algohar website donation form.
+                            </p>
+                        </div>
+                    </div>
+                "
+            ]
+        ]
+    ];
+
+    // Send via SendGrid
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://api.sendgrid.com/v3/mail/send');
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($emailData));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $SENDGRID_API_KEY,
+        'Content-Type: application/json'
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode === 202) {
+        error_log("✅ Email notification sent successfully");
+    } else {
+        error_log("❌ Email notification failed - HTTP $httpCode");
+        error_log("ℹ️  Donation saved successfully - check console above for details");
+    }
+} else {
+    error_log("📧 Email skipped - Please set your SendGrid API key in the PHP file");
+}
+
+// Return success response (exact same format as original)
+http_response_code(201);
+echo json_encode($donation);
+?>

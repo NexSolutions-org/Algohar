@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and user dashboard pages
+Disallow: /admin/
+Disallow: /user/
+Disallow: /login
+Disallow: /payment/
+
+# Allow specific public pages
+Allow: /
+Allow: /about
+Allow: /services
+Allow: /projects
+Allow: /blogs
+Allow: /free-education
+Allow: /donate
+Allow: /donate/ration
+Allow: /contact
+Allow: /reports
+Allow: /bank-details
+
+# Sitemap location (update with your actual domain)
+Sitemap: https://algoharfoundation.org/sitemap.xml
+# Note: Update the domain in robots.txt and sitemap.xml when deploying
+
