@@ -6,13 +6,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import {
   Shield, Award, CheckCircle, Users, MapPin, CreditCard,
-  Plus, Minus, ChevronDown, ChevronUp, Copy, Check
+  Plus, Minus, ChevronDown, ChevronUp, Copy, Check, Upload, X, ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, API_BASE_URL } from "@/lib/queryClient";
+
+async function ensureCsrf() {
+  await fetch(`${API_BASE_URL.replace(/\/$/, '')}/sanctum/csrf-cookie`, { credentials: "include" });
+}
 import SEO from "@/components/SEO";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -98,6 +102,9 @@ export default function DonateQurbani() {
   const [quantity, setQuantity] = useState(1);
   const [customAmount, setCustomAmount] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const basePrice = packages[selectedPkg].price;
   const totalAmount = customAmount ? parseFloat(customAmount) || 0 : basePrice * quantity;
@@ -117,18 +124,31 @@ export default function DonateQurbani() {
 
   const mutation = useMutation({
     mutationFn: async (data: QurbaniForm) => {
-      const apiData = {
-        donor_name: data.donorName,
-        donor_email: data.donorEmail,
-        donor_phone: data.donorPhone,
-        amount: totalAmount,
-        type: "one-time",
-        payment_method: "payfast",
-        donation_type: "qurbani",
-        meta: { package: data.packageType, quantity: data.quantity, on_behalf: data.onBehalf },
-      };
-      const response = await apiRequest("POST", "/api/donations", apiData);
-      return response.json();
+      await ensureCsrf();
+      const formData = new FormData();
+      formData.append("donor_name", data.donorName);
+      formData.append("donor_email", data.donorEmail);
+      formData.append("donor_phone", data.donorPhone);
+      formData.append("amount", String(totalAmount));
+      formData.append("type", "one-time");
+      formData.append("payment_method", screenshotFile ? "bank" : "payfast");
+      formData.append("donation_type", "qurbani");
+      formData.append("meta[package]", data.packageType);
+      formData.append("meta[quantity]", String(data.quantity));
+      if (data.onBehalf) formData.append("meta[on_behalf]", data.onBehalf);
+      if (screenshotFile) formData.append("payment_screenshot", screenshotFile);
+
+      const res = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/api/donations`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+      return res.json();
     },
     onSuccess: (response) => {
       if (response.user) {
@@ -152,6 +172,7 @@ export default function DonateQurbani() {
       } else {
         toast({ title: "Qurbani registered!", description: "JazakAllah Khair. You will receive a confirmation email." });
         form.reset(); setQuantity(1); setCustomAmount("");
+        setScreenshotFile(null); setScreenshotPreview(null);
         setTimeout(() => setLocation("/user/dashboard"), 1500);
       }
     },
@@ -487,6 +508,82 @@ export default function DonateQurbani() {
                       </FormItem>
                     )} />
 
+                    {/* Payment Screenshot Upload */}
+                    <div>
+                      <label className="text-sm font-semibold mb-1 block">
+                        Bank Transfer Screenshot
+                      </label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Paid via bank transfer? Upload your payment receipt to speed up confirmation.
+                      </p>
+
+                      {screenshotPreview ? (
+                        <div className="relative rounded-xl border-2 border-primary/40 overflow-hidden">
+                          <img
+                            src={screenshotPreview}
+                            alt="Payment screenshot"
+                            className="w-full max-h-48 object-contain bg-muted"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => { setScreenshotFile(null); setScreenshotPreview(null); }}
+                            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          <div className="px-3 py-2 bg-primary/5 border-t border-primary/20 flex items-center gap-2 text-xs text-muted-foreground">
+                            <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                            <span className="truncate">{screenshotFile?.name}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <label
+                          className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-5 cursor-pointer transition-colors ${
+                            dragOver
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50 hover:bg-muted/30"
+                          }`}
+                          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                          onDragLeave={() => setDragOver(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setDragOver(false);
+                            const file = e.dataTransfer.files[0];
+                            if (file) {
+                              setScreenshotFile(file);
+                              if (file.type.startsWith("image/")) {
+                                setScreenshotPreview(URL.createObjectURL(file));
+                              } else {
+                                setScreenshotPreview(null);
+                              }
+                            }
+                          }}
+                        >
+                          <Upload className="w-7 h-7 text-muted-foreground" />
+                          <span className="text-sm text-center text-muted-foreground">
+                            <span className="text-primary font-semibold">Click to upload</span> or drag & drop
+                          </span>
+                          <span className="text-xs text-muted-foreground">JPG, PNG, WEBP or PDF — max 5MB</span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,application/pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setScreenshotFile(file);
+                                if (file.type.startsWith("image/")) {
+                                  setScreenshotPreview(URL.createObjectURL(file));
+                                } else {
+                                  setScreenshotPreview(null);
+                                }
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+
                     {/* Total */}
                     <div className="flex justify-between items-center py-3 border-t border-border">
                       <span className="font-semibold">Total Amount:</span>
@@ -498,7 +595,12 @@ export default function DonateQurbani() {
                       disabled={mutation.isPending}
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 text-base rounded-xl"
                     >
-                      {mutation.isPending ? "Processing..." : "🐄 Donate Now — Secure Payment"}
+                      {mutation.isPending
+                        ? "Processing..."
+                        : screenshotFile
+                          ? "Submit Qurbani + Payment Proof"
+                          : "🐄 Donate Now — Secure Payment"
+                      }
                     </Button>
                     <p className="text-center text-xs text-muted-foreground">Powered by SSL & bank-grade encryption</p>
                   </form>

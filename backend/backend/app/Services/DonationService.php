@@ -19,9 +19,9 @@ class DonationService
         protected AdminNotificationService $adminNotificationService
     ) {}
 
-    public function createDonation(array $data, ?User $user = null): array
+    public function createDonation(array $data, ?User $user = null, ?string $screenshotPath = null): array
     {
-        return DB::transaction(function () use ($data, $user) {
+        return DB::transaction(function () use ($data, $user, $screenshotPath) {
             $isNewUser = false;
             
             // If user is not provided, check if user exists by email, otherwise create one
@@ -57,19 +57,20 @@ class DonationService
 
             // Create donation
             $donation = Donation::create([
-                'user_id' => $user->id,
-                'donor_name' => $data['donor_name'],
-                'donor_email' => $data['donor_email'],
-                'donor_phone' => $data['donor_phone'] ?? null,
-                'amount' => $data['amount'],
-                'type' => $data['type'],
-                'frequency' => $data['frequency'] ?? null,
-                'payment_method' => $data['payment_method'],
-                'status' => 'pending',
-                'cause' => $data['cause'] ?? null,
-                'project' => $data['project'] ?? null,
-                'donation_type' => $data['donation_type'] ?? null,
-                'transaction_id' => 'DON-' . strtoupper(Str::random(8)),
+                'user_id'            => $user->id,
+                'donor_name'         => $data['donor_name'],
+                'donor_email'        => $data['donor_email'],
+                'donor_phone'        => $data['donor_phone'] ?? null,
+                'amount'             => $data['amount'],
+                'type'               => $data['type'],
+                'frequency'          => $data['frequency'] ?? null,
+                'payment_method'     => $data['payment_method'],
+                'status'             => 'pending',
+                'cause'              => $data['cause'] ?? null,
+                'project'            => $data['project'] ?? null,
+                'donation_type'      => $data['donation_type'] ?? null,
+                'transaction_id'     => 'DON-' . strtoupper(Str::random(8)),
+                'payment_screenshot' => $screenshotPath,
             ]);
 
             // Create payment record

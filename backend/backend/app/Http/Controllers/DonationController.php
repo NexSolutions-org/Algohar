@@ -54,9 +54,16 @@ class DonationController extends Controller
 
     public function store(StoreDonationRequest $request): JsonResponse
     {
+        $screenshotPath = null;
+        if ($request->hasFile('payment_screenshot')) {
+            $screenshotPath = $request->file('payment_screenshot')
+                ->store('payment_screenshots', 'public');
+        }
+
         $result = $this->donationService->createDonation(
             $request->validated(),
-            $request->user()
+            $request->user(),
+            $screenshotPath
         );
 
         $donation = $result['donation'];

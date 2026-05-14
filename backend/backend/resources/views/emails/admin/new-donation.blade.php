@@ -65,6 +65,28 @@
                     </tr>
                 </table>
             </div>
+
+            @if($donation->payment_screenshot)
+            <div style="background-color: #FFFFFF; border: 2px solid #E60000; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <h3 style="color: #E60000; margin-top: 0; font-size: 16px; border-bottom: 2px solid #E60000; padding-bottom: 8px;">Payment Screenshot</h3>
+                <p style="color: #555; font-size: 13px; margin-bottom: 12px;">The donor has uploaded a bank transfer payment screenshot:</p>
+                @php
+                    $ext = strtolower(pathinfo($donation->payment_screenshot, PATHINFO_EXTENSION));
+                    $screenshotUrl = asset('storage/' . $donation->payment_screenshot);
+                @endphp
+                @if(in_array($ext, ['jpg', 'jpeg', 'png', 'webp']))
+                <a href="{{ $screenshotUrl }}" style="display: block; text-align: center;">
+                    <img src="{{ $screenshotUrl }}" alt="Payment Screenshot"
+                         style="max-width: 100%; max-height: 400px; border-radius: 6px; border: 1px solid #eee;" />
+                </a>
+                @else
+                <a href="{{ $screenshotUrl }}"
+                   style="display: inline-block; background-color: #E60000; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
+                    View Payment Receipt (PDF)
+                </a>
+                @endif
+            </div>
+            @endif
         </div>
         
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #E0E0E0;">

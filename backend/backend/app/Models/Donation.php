@@ -25,6 +25,7 @@ class Donation extends Model
         'donation_type',
         'transaction_id',
         'payment_id',
+        'payment_screenshot',
     ];
 
     protected $casts = [
