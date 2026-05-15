@@ -124,26 +124,47 @@ export default function DonateQurbani() {
 
   const mutation = useMutation({
     mutationFn: async (data: QurbaniForm) => {
-      await ensureCsrf();
-      const formData = new FormData();
-      formData.append("donor_name", data.donorName);
-      formData.append("donor_email", data.donorEmail);
-      formData.append("donor_phone", data.donorPhone);
-      formData.append("amount", String(totalAmount));
-      formData.append("type", "one-time");
-      formData.append("payment_method", screenshotFile ? "bank" : "payfast");
-      formData.append("donation_type", "qurbani");
-      formData.append("meta[package]", data.packageType);
-      formData.append("meta[quantity]", String(data.quantity));
-      if (data.onBehalf) formData.append("meta[on_behalf]", data.onBehalf);
-      if (screenshotFile) formData.append("payment_screenshot", screenshotFile);
+      const baseData = {
+        donor_name:     data.donorName,
+        donor_email:    data.donorEmail,
+        donor_phone:    data.donorPhone,
+        amount:         totalAmount,
+        type:           "one-time",
+        payment_method: screenshotFile ? "bank" : "payfast",
+        donation_type:  "qurbani",
+        meta: { package: data.packageType, quantity: data.quantity, on_behalf: data.onBehalf },
+      };
 
-      const res = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/api/donations`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-        headers: { Accept: "application/json" },
-      });
+      let res: Response;
+
+      if (screenshotFile) {
+        // FormData only when screenshot is attached
+        await ensureCsrf();
+        const xsrf = document.cookie.split("; ").find(r => r.startsWith("XSRF-TOKEN="))?.split("=")[1];
+        const headers: Record<string, string> = { Accept: "application/json" };
+        if (xsrf) headers["X-XSRF-TOKEN"] = decodeURIComponent(xsrf);
+
+        const formData = new FormData();
+        formData.append("donor_name",     baseData.donor_name);
+        formData.append("donor_email",    baseData.donor_email);
+        formData.append("donor_phone",    baseData.donor_phone);
+        formData.append("amount",         String(baseData.amount));
+        formData.append("type",           baseData.type);
+        formData.append("payment_method", baseData.payment_method);
+        formData.append("donation_type",  baseData.donation_type);
+        formData.append("meta[package]",  data.packageType);
+        formData.append("meta[quantity]", String(data.quantity));
+        if (data.onBehalf) formData.append("meta[on_behalf]", data.onBehalf);
+        formData.append("payment_screenshot", screenshotFile);
+
+        res = await fetch(`${API_BASE_URL.replace(/\/$/, "")}/api/donations`, {
+          method: "POST", body: formData, credentials: "include", headers,
+        });
+      } else {
+        // Normal JSON submission (original working approach)
+        res = await apiRequest("POST", "/api/donations", baseData);
+      }
+
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text);
@@ -176,8 +197,14 @@ export default function DonateQurbani() {
         setTimeout(() => setLocation("/user/dashboard"), 1500);
       }
     },
-    onError: () => {
-      toast({ title: "Error", description: "Please try again or contact us.", variant: "destructive" });
+    onError: (error: Error) => {
+      let description = "Please try again or contact us.";
+      try {
+        const parsed = JSON.parse(error.message.replace(/^\d+: /, ""));
+        if (parsed.message) description = parsed.message;
+        if (parsed.errors) description = Object.values(parsed.errors).flat().join(", ");
+      } catch {}
+      toast({ title: "Submission Failed", description, variant: "destructive" });
     },
   });
 
