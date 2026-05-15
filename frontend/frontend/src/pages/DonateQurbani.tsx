@@ -95,7 +95,7 @@ export default function DonateQurbani() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const eidDate = new Date("2026-06-27T00:00:00");
+  const eidDate = new Date("2026-05-27T00:00:00");
   const countdown = useCountdown(eidDate);
 
   const [selectedPkg, setSelectedPkg] = useState<PackageType>("cow-share");
@@ -273,7 +273,7 @@ export default function DonateQurbani() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs opacity-60">Estimated: 27 June 2026</p>
+                <p className="text-xs opacity-60">Estimated: 27 May 2026</p>
               </div>
             </div>
 
@@ -288,10 +288,10 @@ export default function DonateQurbani() {
           <h2 className="text-3xl font-bold mb-10">Every Sacrifice Counts</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: "🐄", val: "6,898",   label: "Cows & Bulls Sacrificed" },
-              { icon: "🐐", val: "3,593",   label: "Goats & Sheep Sacrificed" },
-              { icon: "🥩", val: "280,846", label: "Meat Packs Distributed" },
-              { icon: "👨‍👩‍👧‍👦", val: "1.4M+",  label: "Total Beneficiaries" },
+              { icon: "🐄", val: "324",   label: "Cows & Bulls Sacrificed" },
+              { icon: "🐐", val: "676",   label: "Goats & Sheep Sacrificed" },
+              { icon: "🥩", val: "977",   label: "Meat Packs Distributed" },
+              { icon: "👨‍👩‍👧‍👦", val: "4,800+", label: "Total Beneficiaries" },
             ].map(({ icon, val, label }) => (
               <div key={label} className="flex flex-col items-center gap-2">
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center text-2xl">{icon}</div>
